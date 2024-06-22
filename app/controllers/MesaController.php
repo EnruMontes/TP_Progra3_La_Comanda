@@ -2,7 +2,7 @@
 require_once './models/Mesa.php';
 //require_once './interfaces/IApiUsable.php';
 
-class MesaController extends Mesa
+class MesaController extends Mesa implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
