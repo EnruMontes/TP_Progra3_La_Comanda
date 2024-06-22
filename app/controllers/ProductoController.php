@@ -49,4 +49,34 @@ class ProductoController extends Producto
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
+
+    public function ModificarUno($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+        
+        $id = $parametros['id'];
+        $nombre = $parametros['nombre'];
+        $usuario = $parametros['usuario'];
+        $tiempo = $parametros['tiempo'];
+        $estado = $parametros['estado'];
+        Producto::modificarProducto($id, $nombre, $usuario, $tiempo, $estado);
+        
+        $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
+        
+        $response->getBody()->write($payload);
+        return $response
+        ->withHeader('Content-Type', 'application/json');
+      }
+      
+      public function BorrarUno($request, $response, $args)
+      {
+        $idProducto = $args['id'];
+        Producto::borrarProducto($idProducto);
+
+        $payload = json_encode(array("mensaje" => "Producto borrado con exito"));
+
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
 }

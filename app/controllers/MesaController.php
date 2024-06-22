@@ -43,4 +43,31 @@ class MesaController extends Mesa
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
+
+    public function ModificarUno($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+        
+        $id = $parametros['id'];
+        $estado = $parametros['estado'];
+        Mesa::modificarMesa($id, $estado);
+        
+        $payload = json_encode(array("mensaje" => "Mesa modificada con exito"));
+        
+        $response->getBody()->write($payload);
+        return $response
+        ->withHeader('Content-Type', 'application/json');
+      }
+      
+      public function BorrarUno($request, $response, $args)
+      {
+        $idMesa = $args['id'];
+        Mesa::borrarMesa($idMesa);
+
+        $payload = json_encode(array("mensaje" => "Mesa borrada con exito"));
+
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
 }

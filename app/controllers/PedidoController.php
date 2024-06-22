@@ -49,4 +49,34 @@ class PedidoController extends Pedido
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
+
+    public function ModificarUno($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+        
+        $id = $parametros['id'];
+        $estado = $parametros['estado'];
+        $idMesa = $parametros['idMesa'];
+        $precio = $parametros['precio'];
+        $nombreCliente = $parametros['nombreCliente'];
+        Pedido::modificarPedido($id, $estado, $idMesa, $precio, $nombreCliente);
+        
+        $payload = json_encode(array("mensaje" => "Pedido modificado con exito"));
+        
+        $response->getBody()->write($payload);
+        return $response
+        ->withHeader('Content-Type', 'application/json');
+      }
+      
+      public function BorrarUno($request, $response, $args)
+      {
+        $idPedido = $args['id'];
+        Pedido::borrarPedido($idPedido);
+
+        $payload = json_encode(array("mensaje" => "Pedido borrado con exito"));
+
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
 }

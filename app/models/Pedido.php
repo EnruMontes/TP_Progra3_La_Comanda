@@ -39,4 +39,24 @@ class Pedido
 
         return $consulta->fetchObject('Pedido');
     }
+
+    public static function modificarPedido($id, $estado, $idMesa, $precio, $nombreCliente)
+    {
+        $objAccesoDato = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET estado = :estado, idMesa = :idMesa, precio = :precio, nombreCliente = :nombreCliente WHERE id = :id");
+        $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+        $consulta->bindValue(':idMesa', $idMesa, PDO::PARAM_INT);
+        $consulta->bindValue(':precio', $precio, PDO::PARAM_INT);
+        $consulta->bindValue(':nombreCliente', $nombreCliente, PDO::PARAM_STR);
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+        $consulta->execute();
+    }
+
+    public static function borrarPedido($id)
+    {
+        $objAccesoDato = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDato->prepararConsulta("DELETE FROM pedidos WHERE id = :id");
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+        $consulta->execute();
+    }
 }
