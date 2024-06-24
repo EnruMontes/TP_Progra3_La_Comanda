@@ -24,9 +24,9 @@ class MesaController extends Mesa implements IApiUsable
 
     public function TraerUno($request, $response, $args)
     {
-        // Buscamos mesa por estado
-        $m = $args['estado'];
-        $mesa = Mesa::obtenerMesa($m);
+        // Buscamos mesa por id
+        $mId = $args['id'];
+        $mesa = Mesa::obtenerMesa($mId);
         $payload = json_encode($mesa);
 
         $response->getBody()->write($payload);
@@ -69,5 +69,52 @@ class MesaController extends Mesa implements IApiUsable
         $response->getBody()->write($payload);
         return $response
           ->withHeader('Content-Type', 'application/json');
+    }
+
+    public function GuardarCSV($request, $response, $args) // GET
+    {
+      if($archivo = fopen("csv/mesas.csv", "w"))
+      {
+        $lista = Mesa::obtenerTodos();
+        foreach( $lista as $mesa )
+        {
+            fputcsv($archivo, [$mesa->id, $mesa->estado]);
+        }
+        fclose($archivo);
+        $payload =  json_encode(array("mensaje" => "La lista de mesas se guardo correctamente"));
+      }
+      else
+      {
+        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de mesas.csv"));
+      }
+  
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+    }
+
+    public function CargarCSV($request, $response, $args) // GET
+    {
+      if(($archivo = fopen("csv/mesas.csv", "r")) !== false)
+      {
+        Mesa::borrarMesas();
+        while (($filaMesa = fgetcsv($archivo, 0, ',')) !== false)
+        {
+          $nuevaMesa = new Mesa();
+          $nuevaMesa->id = $filaMesa[0];
+          $nuevaMesa->estado = $filaMesa[1];
+          $nuevaMesa->crearMesaCSV();
+        }
+        fclose($archivo);
+        $payload =  json_encode(array("mensaje" => "Las mesas se cargaron correctamente"));
+      }
+      else
+      {
+        $payload =  json_encode(array("mensaje" => "No se pudo leer el archivo de mesas.csv"));
+      }
+                
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 }

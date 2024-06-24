@@ -79,4 +79,54 @@ class PedidoController extends Pedido implements IApiUsable
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
+
+    public function GuardarCSV($request, $response, $args) // GET
+    {
+      if($archivo = fopen("csv/pedidos.csv", "w"))
+      {
+        $lista = Pedido::obtenerTodos();
+        foreach( $lista as $pedido )
+        {
+            fputcsv($archivo, [$pedido->id, $pedido->estado, $pedido->idMesa, $pedido->precio, $pedido->nombreCliente]);
+        }
+        fclose($archivo);
+        $payload =  json_encode(array("mensaje" => "La lista de pedidos se guardo correctamente"));
+      }
+      else
+      {
+        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de pedidos.csv"));
+      }
+  
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+    }
+
+    public function CargarCSV($request, $response, $args) // GET
+    {
+      if(($archivo = fopen("csv/pedidos.csv", "r")) !== false)
+      {
+        Pedido::borrarPedidos();
+        while (($filaPedido = fgetcsv($archivo, 0, ',')) !== false)
+        {
+          $nuevoPedido = new Pedido();
+          $nuevoPedido->id = $filaPedido[0];
+          $nuevoPedido->estado = $filaPedido[1];
+          $nuevoPedido->idMesa = $filaPedido[2];
+          $nuevoPedido->precio = $filaPedido[3];
+          $nuevoPedido->nombreCliente = $filaPedido[4];
+          $nuevoPedido->crearPedidoCSV();
+        }
+        fclose($archivo);
+        $payload =  json_encode(array("mensaje" => "Los pedidos se cargaron correctamente"));
+      }
+      else
+      {
+        $payload =  json_encode(array("mensaje" => "No se pudo leer el archivo de pedidos.csv"));
+      }
+                
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+    }
 }

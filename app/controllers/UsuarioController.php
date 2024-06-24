@@ -50,10 +50,10 @@ class UsuarioController extends Usuario implements IApiUsable
     {
         $parametros = $request->getParsedBody();
 
-        $nombre = $parametros['nombre'];
+        $usuario = $parametros['usuario'];
         $clave = $parametros['clave'];
         $id = $parametros['id'];
-        Usuario::modificarUsuario($nombre, $clave, $id);
+        Usuario::modificarUsuario($usuario, $clave, $id);
 
         $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
 
@@ -72,5 +72,53 @@ class UsuarioController extends Usuario implements IApiUsable
         $response->getBody()->write($payload);
         return $response
           ->withHeader('Content-Type', 'application/json');
+    }
+
+    public function GuardarCSV($request, $response, $args) // GET
+    {
+      if($archivo = fopen("csv/usuarios.csv", "w"))
+      {
+        $lista = Usuario::obtenerTodos();
+        foreach( $lista as $usuario )
+        {
+            fputcsv($archivo, [$usuario->id, $usuario->usuario, $usuario->clave]);
+        }
+        fclose($archivo);
+        $payload =  json_encode(array("mensaje" => "La lista de usuarios se guardo correctamente"));
+      }
+      else
+      {
+        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de usuarios.csv"));
+      }
+  
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+    }
+
+    public function CargarCSV($request, $response, $args) // GET
+    {
+      if(($archivo = fopen("csv/usuarios.csv", "r")) !== false)
+      {
+        Usuario::borrarUsuarios();
+        while (($filaPedido = fgetcsv($archivo, 0, ',')) !== false)
+        {
+          $nuevoUsuario = new Usuario();
+          $nuevoUsuario->id = $filaPedido[0];
+          $nuevoUsuario->usuario = $filaPedido[1];
+          $nuevoUsuario->clave = $filaPedido[2];
+          $nuevoUsuario->crearUsuarioCSV();
+        }
+        fclose($archivo);
+        $payload =  json_encode(array("mensaje" => "Los usuarios se cargaron correctamente"));
+      }
+      else
+      {
+        $payload =  json_encode(array("mensaje" => "No se pudo leer el archivo de usuarios.csv"));
+      }
+                
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 }

@@ -79,4 +79,54 @@ class ProductoController extends Producto implements IApiUsable
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
+
+    public function GuardarCSV($request, $response, $args) // GET
+    {
+      if($archivo = fopen("csv/productos.csv", "w"))
+      {
+        $lista = Producto::obtenerTodos();
+        foreach( $lista as $producto )
+        {
+            fputcsv($archivo, [$producto->id, $producto->nombre, $producto->usuario, $producto->tiempo, $producto->estado]);
+        }
+        fclose($archivo);
+        $payload =  json_encode(array("mensaje" => "La lista de productos se guardo correctamente"));
+      }
+      else
+      {
+        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de productos.csv"));
+      }
+  
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+    }
+
+    public function CargarCSV($request, $response, $args) // GET
+    {
+      if(($archivo = fopen("csv/productos.csv", "r")) !== false)
+      {
+        Producto::borrarProductos();
+        while (($filaPedido = fgetcsv($archivo, 0, ',')) !== false)
+        {
+          $nuevoProducto = new Producto();
+          $nuevoProducto->id = $filaPedido[0];
+          $nuevoProducto->nombre = $filaPedido[1];
+          $nuevoProducto->usuario = $filaPedido[2];
+          $nuevoProducto->tiempo = $filaPedido[3];
+          $nuevoProducto->estado = $filaPedido[4];
+          $nuevoProducto->crearProductoCSV();
+        }
+        fclose($archivo);
+        $payload =  json_encode(array("mensaje" => "Los productos se cargaron correctamente"));
+      }
+      else
+      {
+        $payload =  json_encode(array("mensaje" => "No se pudo leer el archivo de productos.csv"));
+      }
+                
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+    }
 }
