@@ -42,8 +42,8 @@ class Pedido
 
     public static function modificarPedido($id, $estado, $idMesa, $precio, $nombreCliente)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET estado = :estado, idMesa = :idMesa, precio = :precio, nombreCliente = :nombreCliente WHERE id = :id");
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedidos SET estado = :estado, idMesa = :idMesa, precio = :precio, nombreCliente = :nombreCliente WHERE id = :id");
         $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
         $consulta->bindValue(':idMesa', $idMesa, PDO::PARAM_INT);
         $consulta->bindValue(':precio', $precio, PDO::PARAM_INT);
@@ -54,8 +54,8 @@ class Pedido
 
     public static function borrarPedido($id)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("DELETE FROM pedidos WHERE id = :id");
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("DELETE FROM pedidos WHERE id = :id");
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
     }
@@ -63,21 +63,40 @@ class Pedido
     public function crearPedidoCSV()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (id, estado, idMesa, precio, nombreCliente) VALUES (:id, :estado, :idMesa, :precio, :nombreCliente)");
-        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
-        $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
-        $consulta->bindValue(':idMesa', $this->idMesa, PDO::PARAM_INT);
-        $consulta->bindValue(':precio', $this->precio, PDO::PARAM_INT);
-        $consulta->bindValue(':nombreCliente', $this->nombreCliente, PDO::PARAM_STR);
-        $consulta->execute();
+        $rta = null;
 
-        return $objAccesoDatos->obtenerUltimoId();
+        if(!($this->existeProducto()))
+        {
+            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (id, estado, idMesa, precio, nombreCliente) VALUES (:id, :estado, :idMesa, :precio, :nombreCliente)");
+            $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
+            $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
+            $consulta->bindValue(':idMesa', $this->idMesa, PDO::PARAM_INT);
+            $consulta->bindValue(':precio', $this->precio, PDO::PARAM_INT);
+            $consulta->bindValue(':nombreCliente', $this->nombreCliente, PDO::PARAM_STR);
+            $consulta->execute();
+            
+            $rta = $objAccesoDatos->obtenerUltimoId();
+        }
+        else
+        {
+            Pedido::modificarPedido($this->id, $this->estado, $this->idMesa, $this->precio, $this->nombreCliente);   
+            $rta = $objAccesoDatos->obtenerUltimoId();
+        }
+
+        return $rta;
     }
-
-    public static function borrarPedidos()
+    
+    public function existeProducto()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("TRUNCATE pedidos");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 1 FROM pedidos WHERE id = :id");
+        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
         $consulta->execute();
+        
+        // Verifica si la consulta devuelve alguna fila
+        $resultado = $consulta->fetch(PDO::FETCH_ASSOC);
+
+        // Devuelve true si se encontró una fila, false si no
+        return $resultado !== false;
     }
 }

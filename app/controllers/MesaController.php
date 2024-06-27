@@ -1,6 +1,6 @@
 <?php
 require_once './models/Mesa.php';
-//require_once './interfaces/IApiUsable.php';
+require_once './interfaces/IApiUsable.php';
 
 class MesaController extends Mesa implements IApiUsable
 {
@@ -73,39 +73,52 @@ class MesaController extends Mesa implements IApiUsable
 
     public function GuardarCSV($request, $response, $args) // GET
     {
-      if($archivo = fopen("csv/mesas.csv", "w"))
+      $nombreArchivo = "mesas.csv";
+      $filePath = "archivos/" . $nombreArchivo;
+
+      if($archivo = fopen($filePath, "w"))
       {
+        // fputcsv($archivo, ['id', 'estado']);
         $lista = Mesa::obtenerTodos();
         foreach( $lista as $mesa )
         {
-            fputcsv($archivo, [$mesa->id, $mesa->estado]);
+          fputcsv($archivo, [$mesa->id, $mesa->estado]);
         }
         fclose($archivo);
-        $payload =  json_encode(array("mensaje" => "La lista de mesas se guardo correctamente"));
+
+        // Leer el archivo CSV recién creado
+        $csvContent = file_get_contents($filePath);
+
+        // Establecer la respuesta con el contenido del archivo CSV
+        $response->getBody()->write($csvContent);
+        return $response
+            ->withHeader('Content-Type', 'text/csv')
+            ->withHeader('Content-Disposition', 'attachment; filename=' . $nombreArchivo);
       }
       else
       {
-        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de mesas.csv"));
+        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de pedidos.csv"));
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
       }
-  
-      $response->getBody()->write($payload);
-      return $response
-        ->withHeader('Content-Type', 'application/json');
     }
 
-    public function CargarCSV($request, $response, $args) // GET
+    public function CargarCSV($request, $response, $args) // POST
     {
-      if(($archivo = fopen("csv/mesas.csv", "r")) !== false)
+      $parametros = $request->getUploadedFiles();
+      $archivo = isset($parametros['archivo']) ? $parametros['archivo'] : null;
+      $tempFilePath = $archivo->getStream()->getMetadata('uri'); // Obtener la ruta temporal del archivo
+
+      if(($handle = fopen($tempFilePath, "r")) !== false)
       {
-        Mesa::borrarMesas();
-        while (($filaMesa = fgetcsv($archivo, 0, ',')) !== false)
+        while (($filaMesa = fgetcsv($handle, 0, ',')) !== false)
         {
           $nuevaMesa = new Mesa();
           $nuevaMesa->id = $filaMesa[0];
           $nuevaMesa->estado = $filaMesa[1];
           $nuevaMesa->crearMesaCSV();
         }
-        fclose($archivo);
+        fclose($handle);
         $payload =  json_encode(array("mensaje" => "Las mesas se cargaron correctamente"));
       }
       else

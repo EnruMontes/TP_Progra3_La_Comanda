@@ -36,17 +36,17 @@ class Mesa
 
     public static function modificarMesa($id, $estado)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
-        $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+        $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
         $consulta->execute();
     }
 
     public static function borrarMesa($id)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("DELETE FROM mesas WHERE id = :id");
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("DELETE FROM mesas WHERE id = :id");
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
     }
@@ -54,18 +54,37 @@ class Mesa
     public function crearMesaCSV()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO mesas (id, estado) VALUES (:id, :estado)");
-        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
-        $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
-        $consulta->execute();
+        $rta = null;
 
-        return $objAccesoDatos->obtenerUltimoId();
+        if(!($this->existeMesa()))
+        {
+            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO mesas (id, estado) VALUES (:id, :estado)");
+            $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
+            $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
+            $consulta->execute();
+            
+            $rta = $objAccesoDatos->obtenerUltimoId();
+        }
+        else
+        {
+            Mesa::modificarMesa($this->id, $this->estado);
+            $rta = $objAccesoDatos->obtenerUltimoId();
+        }
+
+        return $rta;
     }
-
-    public static function borrarMesas()
+    
+    public function existeMesa()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("TRUNCATE mesas");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 1 FROM mesas WHERE id = :id");
+        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
         $consulta->execute();
+        
+        // Verifica si la consulta devuelve alguna fila
+        $resultado = $consulta->fetch(PDO::FETCH_ASSOC);
+
+        // Devuelve true si se encontró una fila, false si no
+        return $resultado !== false;
     }
 }

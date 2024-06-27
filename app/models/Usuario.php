@@ -38,20 +38,20 @@ class Usuario
         return $consulta->fetchObject('Usuario');
     }
 
-    public static function modificarUsuario($usuario, $clave, $id)
+    public static function modificarUsuario($id, $usuario, $clave)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE usuarios SET usuario = :usuario, clave = :clave WHERE id = :id");
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE usuarios SET usuario = :usuario, clave = :clave WHERE id = :id");
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->bindValue(':usuario', $usuario, PDO::PARAM_STR);
         $consulta->bindValue(':clave', $clave, PDO::PARAM_STR);
-        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
     }
 
     public static function borrarUsuario($id)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("DELETE FROM usuarios WHERE id = :id");
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("DELETE FROM usuarios WHERE id = :id");
         // $fecha = new DateTime(date("d-m-Y"));
         // $consulta->bindValue(':fechaBaja', date_format($fecha, 'Y-m-d H:i:s'));
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
@@ -61,19 +61,38 @@ class Usuario
     public function crearUsuarioCSV()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO usuarios (id, usuario, clave) VALUES (:id, :usuario, :clave)");
-        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
-        $consulta->bindValue(':usuario', $this->usuario, PDO::PARAM_STR);
-        $consulta->bindValue(':clave', $this->clave, PDO::PARAM_STR);
-        $consulta->execute();
+        $rta = null;
 
-        return $objAccesoDatos->obtenerUltimoId();
+        if(!($this->existeUsuario()))
+        {
+            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO usuarios (id, usuario, clave) VALUES (:id, :usuario, :clave)");
+            $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
+            $consulta->bindValue(':usuario', $this->usuario, PDO::PARAM_STR);
+            $consulta->bindValue(':clave', $this->clave, PDO::PARAM_STR);
+            $consulta->execute();
+            
+            $rta = $objAccesoDatos->obtenerUltimoId();
+        }
+        else
+        {
+            Usuario::modificarUsuario($this->id, $this->usuario, $this->clave);
+            $rta = $objAccesoDatos->obtenerUltimoId();
+        }
+
+        return $rta;
     }
-
-    public static function borrarUsuarios()
+    
+    public function existeUsuario()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("TRUNCATE usuarios");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 1 FROM usuarios WHERE id = :id");
+        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
         $consulta->execute();
+        
+        // Verifica si la consulta devuelve alguna fila
+        $resultado = $consulta->fetch(PDO::FETCH_ASSOC);
+
+        // Devuelve true si se encontró una fila, false si no
+        return $resultado !== false;
     }
 }

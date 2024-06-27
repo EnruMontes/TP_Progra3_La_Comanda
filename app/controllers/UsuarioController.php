@@ -50,10 +50,10 @@ class UsuarioController extends Usuario implements IApiUsable
     {
         $parametros = $request->getParsedBody();
 
+        $id = $parametros['id'];
         $usuario = $parametros['usuario'];
         $clave = $parametros['clave'];
-        $id = $parametros['id'];
-        Usuario::modificarUsuario($usuario, $clave, $id);
+        Usuario::modificarUsuario($id, $usuario, $clave);
 
         $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
 
@@ -76,7 +76,10 @@ class UsuarioController extends Usuario implements IApiUsable
 
     public function GuardarCSV($request, $response, $args) // GET
     {
-      if($archivo = fopen("csv/usuarios.csv", "w"))
+      $nombreArchivo = "usuarios.csv";
+      $filePath = "archivos/" . $nombreArchivo;
+
+      if($archivo = fopen($filePath, "w"))
       {
         $lista = Usuario::obtenerTodos();
         foreach( $lista as $usuario )
@@ -84,24 +87,33 @@ class UsuarioController extends Usuario implements IApiUsable
             fputcsv($archivo, [$usuario->id, $usuario->usuario, $usuario->clave]);
         }
         fclose($archivo);
-        $payload =  json_encode(array("mensaje" => "La lista de usuarios se guardo correctamente"));
+
+        // Leer el archivo CSV recién creado
+        $csvContent = file_get_contents($filePath);
+
+        // Establecer la respuesta con el contenido del archivo CSV
+        $response->getBody()->write($csvContent);
+        return $response
+            ->withHeader('Content-Type', 'text/csv')
+            ->withHeader('Content-Disposition', 'attachment; filename=' . $nombreArchivo);
       }
       else
       {
-        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de usuarios.csv"));
+        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de pedidos.csv"));
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
       }
-  
-      $response->getBody()->write($payload);
-      return $response
-        ->withHeader('Content-Type', 'application/json');
     }
 
-    public function CargarCSV($request, $response, $args) // GET
+    public function CargarCSV($request, $response, $args) // POST
     {
-      if(($archivo = fopen("csv/usuarios.csv", "r")) !== false)
+      $parametros = $request->getUploadedFiles();
+      $archivo = isset($parametros['archivo']) ? $parametros['archivo'] : null;
+      $tempFilePath = $archivo->getStream()->getMetadata('uri'); // Obtener la ruta temporal del archivo
+
+      if(($handle = fopen($tempFilePath, "r")) !== false)
       {
-        Usuario::borrarUsuarios();
-        while (($filaPedido = fgetcsv($archivo, 0, ',')) !== false)
+        while (($filaPedido = fgetcsv($handle, 0, ',')) !== false)
         {
           $nuevoUsuario = new Usuario();
           $nuevoUsuario->id = $filaPedido[0];
@@ -109,7 +121,7 @@ class UsuarioController extends Usuario implements IApiUsable
           $nuevoUsuario->clave = $filaPedido[2];
           $nuevoUsuario->crearUsuarioCSV();
         }
-        fclose($archivo);
+        fclose($handle);
         $payload =  json_encode(array("mensaje" => "Los usuarios se cargaron correctamente"));
       }
       else

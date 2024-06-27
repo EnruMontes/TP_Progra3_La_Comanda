@@ -1,6 +1,6 @@
 <?php
 require_once './models/Pedido.php';
-//require_once './interfaces/IApiUsable.php';
+require_once './interfaces/IApiUsable.php';
 
 class PedidoController extends Pedido implements IApiUsable
 {
@@ -82,7 +82,10 @@ class PedidoController extends Pedido implements IApiUsable
 
     public function GuardarCSV($request, $response, $args) // GET
     {
-      if($archivo = fopen("csv/pedidos.csv", "w"))
+      $nombreArchivo = "pedidos.csv";
+      $filePath = "archivos/" . $nombreArchivo;
+
+      if($archivo = fopen($filePath, "w"))
       {
         $lista = Pedido::obtenerTodos();
         foreach( $lista as $pedido )
@@ -90,24 +93,33 @@ class PedidoController extends Pedido implements IApiUsable
             fputcsv($archivo, [$pedido->id, $pedido->estado, $pedido->idMesa, $pedido->precio, $pedido->nombreCliente]);
         }
         fclose($archivo);
-        $payload =  json_encode(array("mensaje" => "La lista de pedidos se guardo correctamente"));
+
+        // Leer el archivo CSV recién creado
+        $csvContent = file_get_contents($filePath);
+
+        // Establecer la respuesta con el contenido del archivo CSV
+        $response->getBody()->write($csvContent);
+        return $response
+            ->withHeader('Content-Type', 'text/csv')
+            ->withHeader('Content-Disposition', 'attachment; filename=' . $nombreArchivo);
       }
       else
       {
         $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de pedidos.csv"));
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
       }
-  
-      $response->getBody()->write($payload);
-      return $response
-        ->withHeader('Content-Type', 'application/json');
     }
 
     public function CargarCSV($request, $response, $args) // GET
     {
-      if(($archivo = fopen("csv/pedidos.csv", "r")) !== false)
+      $parametros = $request->getUploadedFiles();
+      $archivo = isset($parametros['archivo']) ? $parametros['archivo'] : null;
+      $tempFilePath = $archivo->getStream()->getMetadata('uri'); // Obtener la ruta temporal del archivo
+
+      if(($handle = fopen($tempFilePath, "r")) !== false)
       {
-        Pedido::borrarPedidos();
-        while (($filaPedido = fgetcsv($archivo, 0, ',')) !== false)
+        while (($filaPedido = fgetcsv($handle, 0, ',')) !== false)
         {
           $nuevoPedido = new Pedido();
           $nuevoPedido->id = $filaPedido[0];
@@ -117,7 +129,7 @@ class PedidoController extends Pedido implements IApiUsable
           $nuevoPedido->nombreCliente = $filaPedido[4];
           $nuevoPedido->crearPedidoCSV();
         }
-        fclose($archivo);
+        fclose($handle);
         $payload =  json_encode(array("mensaje" => "Los pedidos se cargaron correctamente"));
       }
       else

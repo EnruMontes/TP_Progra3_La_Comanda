@@ -37,8 +37,8 @@ $app->addBodyParsingMiddleware();
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
   $group->get('[/]', \UsuarioController::class . ':TraerTodos');
   $group->get('/GuardarCSV', \UsuarioController::class . ':GuardarCSV');
-  $group->get('/CargarCSV', \UsuarioController::class . ':CargarCSV');
   $group->get('/{usuario}', \UsuarioController::class . ':TraerUno');
+  $group->post('/CargarCSV', \UsuarioController::class . ':CargarCSV');
   $group->post('[/]', \UsuarioController::class . ':CargarUno');
   $group->put('[/]', \UsuarioController::class . ':ModificarUno');
   $group->delete('/{id}', \UsuarioController::class . ':BorrarUno');
@@ -47,8 +47,8 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
 $app->group('/productos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \ProductoController::class . ':TraerTodos');
   $group->get('/GuardarCSV', \ProductoController::class . ':GuardarCSV');
-  $group->get('/CargarCSV', \ProductoController::class . ':CargarCSV');
   $group->get('/{nombre}', \ProductoController::class . ':TraerUno');
+  $group->post('/CargarCSV', \ProductoController::class . ':CargarCSV');
   $group->post('[/]', \ProductoController::class . ':CargarUno');
   $group->put('[/]', \ProductoController::class . ':ModificarUno');
   $group->delete('/{id}', \ProductoController::class . ':BorrarUno');
@@ -57,8 +57,8 @@ $app->group('/productos', function (RouteCollectorProxy $group) {
 $app->group('/mesas', function (RouteCollectorProxy $group) {
   $group->get('[/]', \MesaController::class . ':TraerTodos');
   $group->get('/GuardarCSV', \MesaController::class . ':GuardarCSV');
-  $group->get('/CargarCSV', \MesaController::class . ':CargarCSV');
   $group->get('/{id}', \MesaController::class . ':TraerUno');
+  $group->post('/CargarCSV', \MesaController::class . ':CargarCSV');
   $group->post('[/]', \MesaController::class . ':CargarUno');
   $group->put('[/]', \MesaController::class . ':ModificarUno');
   $group->delete('/{id}', \MesaController::class . ':BorrarUno');
@@ -67,8 +67,8 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
 $app->group('/pedidos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \PedidoController::class . ':TraerTodos');
   $group->get('/GuardarCSV', \PedidoController::class . ':GuardarCSV');
-  $group->get('/CargarCSV', \PedidoController::class . ':CargarCSV');
   $group->get('/{idMesa}', \PedidoController::class . ':TraerUno');
+  $group->post('/CargarCSV', \PedidoController::class . ':CargarCSV');
   $group->post('[/]', \PedidoController::class . ':CargarUno');
   $group->put('[/]', \PedidoController::class . ':ModificarUno');
   $group->delete('/{id}', \PedidoController::class . ':BorrarUno');

@@ -42,8 +42,8 @@ class Producto
 
     public static function modificarProducto($id, $nombre, $usuario, $tiempo, $estado)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE productos SET nombre = :nombre, usuario = :usuario, tiempo = :tiempo, estado = :estado WHERE id = :id");
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE productos SET nombre = :nombre, usuario = :usuario, tiempo = :tiempo, estado = :estado WHERE id = :id");
         $consulta->bindValue(':nombre', $nombre, PDO::PARAM_STR);
         $consulta->bindValue(':usuario', $usuario, PDO::PARAM_STR);
         $consulta->bindValue(':tiempo', $tiempo, PDO::PARAM_INT);
@@ -54,8 +54,8 @@ class Producto
 
     public static function borrarProducto($id)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("DELETE FROM productos WHERE id = :id");
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("DELETE FROM productos WHERE id = :id");
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
     }
@@ -63,21 +63,40 @@ class Producto
     public function crearProductoCSV()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO productos (id, nombre, usuario, tiempo, estado) VALUES (:id, :nombre, :usuario, :tiempo, :estado)");
-        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
-        $consulta->bindValue(':nombre', $this->nombre, PDO::PARAM_STR);
-        $consulta->bindValue(':usuario', $this->usuario, PDO::PARAM_STR);
-        $consulta->bindValue(':tiempo', $this->tiempo, PDO::PARAM_INT);
-        $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
-        $consulta->execute();
+        $rta = null;
 
-        return $objAccesoDatos->obtenerUltimoId();
+        if(!($this->existeProducto()))
+        {
+            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO productos (id, nombre, usuario, tiempo, estado) VALUES (:id, :nombre, :usuario, :tiempo, :estado)");
+            $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
+            $consulta->bindValue(':nombre', $this->nombre, PDO::PARAM_STR);
+            $consulta->bindValue(':usuario', $this->usuario, PDO::PARAM_STR);
+            $consulta->bindValue(':tiempo', $this->tiempo, PDO::PARAM_INT);
+            $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
+            $consulta->execute();
+            
+            $rta = $objAccesoDatos->obtenerUltimoId();
+        }
+        else
+        {
+            Producto::modificarProducto($this->id, $this->nombre, $this->usuario, $this->tiempo, $this->estado);
+            $rta = $objAccesoDatos->obtenerUltimoId();
+        }
+
+        return $rta;
     }
-
-    public static function borrarProductos()
+    
+    public function existeProducto()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("TRUNCATE productos");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 1 FROM productos WHERE id = :id");
+        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
         $consulta->execute();
+        
+        // Verifica si la consulta devuelve alguna fila
+        $resultado = $consulta->fetch(PDO::FETCH_ASSOC);
+
+        // Devuelve true si se encontró una fila, false si no
+        return $resultado !== false;
     }
 }

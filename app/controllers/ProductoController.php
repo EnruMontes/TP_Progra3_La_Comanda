@@ -1,6 +1,6 @@
 <?php
 require_once './models/Producto.php';
-//require_once './interfaces/IApiUsable.php';
+require_once './interfaces/IApiUsable.php';
 
 class ProductoController extends Producto implements IApiUsable
 {
@@ -82,7 +82,10 @@ class ProductoController extends Producto implements IApiUsable
 
     public function GuardarCSV($request, $response, $args) // GET
     {
-      if($archivo = fopen("csv/productos.csv", "w"))
+      $nombreArchivo = "productos.csv";
+      $filePath = "archivos/" . $nombreArchivo;
+
+      if($archivo = fopen($filePath, "w"))
       {
         $lista = Producto::obtenerTodos();
         foreach( $lista as $producto )
@@ -90,24 +93,33 @@ class ProductoController extends Producto implements IApiUsable
             fputcsv($archivo, [$producto->id, $producto->nombre, $producto->usuario, $producto->tiempo, $producto->estado]);
         }
         fclose($archivo);
-        $payload =  json_encode(array("mensaje" => "La lista de productos se guardo correctamente"));
+
+        // Leer el archivo CSV recién creado
+        $csvContent = file_get_contents($filePath);
+
+        // Establecer la respuesta con el contenido del archivo CSV
+        $response->getBody()->write($csvContent);
+        return $response
+            ->withHeader('Content-Type', 'text/csv')
+            ->withHeader('Content-Disposition', 'attachment; filename=' . $nombreArchivo);
       }
       else
       {
-        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de productos.csv"));
+        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de pedidos.csv"));
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
       }
-  
-      $response->getBody()->write($payload);
-      return $response
-        ->withHeader('Content-Type', 'application/json');
     }
 
     public function CargarCSV($request, $response, $args) // GET
     {
-      if(($archivo = fopen("csv/productos.csv", "r")) !== false)
+      $parametros = $request->getUploadedFiles();
+      $archivo = isset($parametros['archivo']) ? $parametros['archivo'] : null;
+      $tempFilePath = $archivo->getStream()->getMetadata('uri'); // Obtener la ruta temporal del archivo
+
+      if(($handle = fopen($tempFilePath, "r")) !== false)
       {
-        Producto::borrarProductos();
-        while (($filaPedido = fgetcsv($archivo, 0, ',')) !== false)
+        while (($filaPedido = fgetcsv($handle, 0, ',')) !== false)
         {
           $nuevoProducto = new Producto();
           $nuevoProducto->id = $filaPedido[0];
@@ -117,7 +129,7 @@ class ProductoController extends Producto implements IApiUsable
           $nuevoProducto->estado = $filaPedido[4];
           $nuevoProducto->crearProductoCSV();
         }
-        fclose($archivo);
+        fclose($handle);
         $payload =  json_encode(array("mensaje" => "Los productos se cargaron correctamente"));
       }
       else
