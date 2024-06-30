@@ -8,12 +8,14 @@ class UsuarioController extends Usuario implements IApiUsable
     {
         $parametros = $request->getParsedBody();
 
-        $usuario = $parametros['usuario'];
+        $sector = $parametros['sector'];
+        $nombre = $parametros['nombre'];
         $clave = $parametros['clave'];
 
         // Creamos el usuario
         $usr = new Usuario();
-        $usr->usuario = $usuario;
+        $usr->sector = $sector;
+        $usr->nombre = $nombre;
         $usr->clave = $clave;
         $usr->crearUsuario();
 
@@ -26,9 +28,9 @@ class UsuarioController extends Usuario implements IApiUsable
 
     public function TraerUno($request, $response, $args)
     {
-        // Buscamos usuario por nombre
-        $usr = $args['usuario'];
-        $usuario = Usuario::obtenerUsuario($usr);
+        // Buscamos usuario por id
+        $usrId = $args['id'];
+        $usuario = Usuario::obtenerUsuario($usrId);
         $payload = json_encode($usuario);
 
         $response->getBody()->write($payload);
@@ -39,21 +41,24 @@ class UsuarioController extends Usuario implements IApiUsable
     public function TraerTodos($request, $response, $args)
     {
         $lista = Usuario::obtenerTodos();
-        $payload = json_encode(array("listaUsuario" => $lista));
+        $payload = json_encode(array("listaUsuarios" => $lista));
 
         $response->getBody()->write($payload);
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
     
-    public function ModificarUno($request, $response, $args)
+    public function ModificarUno($request, $response, $args) // x-www-form-unlencoded
     {
         $parametros = $request->getParsedBody();
 
         $id = $parametros['id'];
-        $usuario = $parametros['usuario'];
+        $sector = $parametros['sector'];
+        $fechaIngreso = $parametros['fechaIngreso'];
+        $fechaBaja = $parametros['fechaBaja'];
+        $nombre = $parametros['nombre'];
         $clave = $parametros['clave'];
-        Usuario::modificarUsuario($id, $usuario, $clave);
+        Usuario::modificarUsuario($id, $sector, $fechaIngreso, $fechaBaja, $nombre, $clave);
 
         $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
 
@@ -84,7 +89,7 @@ class UsuarioController extends Usuario implements IApiUsable
         $lista = Usuario::obtenerTodos();
         foreach( $lista as $usuario )
         {
-            fputcsv($archivo, [$usuario->id, $usuario->usuario, $usuario->clave]);
+            fputcsv($archivo, [$usuario->id, $usuario->sector, $usuario->fechaIngreso, $usuario->fechaBaja, $usuario->nombre, $usuario->clave]);
         }
         fclose($archivo);
 
@@ -117,8 +122,11 @@ class UsuarioController extends Usuario implements IApiUsable
         {
           $nuevoUsuario = new Usuario();
           $nuevoUsuario->id = $filaPedido[0];
-          $nuevoUsuario->usuario = $filaPedido[1];
-          $nuevoUsuario->clave = $filaPedido[2];
+          $nuevoUsuario->sector = $filaPedido[1];
+          $nuevoUsuario->fechaIngreso = $filaPedido[2];
+          $nuevoUsuario->fechaBaja = $filaPedido[3];
+          $nuevoUsuario->nombre = $filaPedido[4];
+          $nuevoUsuario->clave = $filaPedido[5];
           $nuevoUsuario->crearUsuarioCSV();
         }
         fclose($handle);
@@ -132,5 +140,40 @@ class UsuarioController extends Usuario implements IApiUsable
       $response->getBody()->write($payload);
       return $response
         ->withHeader('Content-Type', 'application/json');
+    }
+
+    public function LoginUsuario($request, $response, $args)
+    {
+      $parametros = $request->getParsedBody();
+
+      $nombre = $parametros['nombre'];
+      $clave = $parametros['clave'];
+
+      $existe = false;
+      $listaUsuarios = Usuario::obtenerTodos();
+
+      foreach ($listaUsuarios as $usuario) {
+        if($usuario->nombre == $nombre && $usuario->clave == $clave)
+        {
+          $existe = true;
+          $idUsuario = $usuario->id;
+          $sector = $usuario->sector;
+        }
+      }
+      if($existe)
+      {
+        $datos=array('idUsuario' => $idUsuario, 'sector' => $sector);
+        $token = AutentificadorJWT::CrearToken($datos);
+        $payload = json_encode(array('jwt' => $token));
+      }
+      else
+      {
+        $payload = json_encode(array('error' => 'Nombre de usuario o clave incorrectos'));
+      }
+
+      $response->getBody()->write($payload);
+
+      return $response->withHeader('Content-Type', 'application/json');
+
     }
 }
