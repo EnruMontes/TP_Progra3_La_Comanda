@@ -8,11 +8,13 @@ class MesaController extends Mesa implements IApiUsable
     {
         $parametros = $request->getParsedBody();
 
+        $codigo = $parametros['codigo'];
         $estado = $parametros['estado'];
 
         // Creamos la mesa
         $mesa = new Mesa();
         $mesa->estado = $estado;
+        $mesa->codigo = $codigo;
         $mesa->crearMesa();
 
         $payload = json_encode(array("mensaje" => "Mesa creada con exito"));
@@ -49,8 +51,9 @@ class MesaController extends Mesa implements IApiUsable
         $parametros = $request->getParsedBody();
         
         $id = $parametros['id'];
+        $codigo = $parametros['codigo'];
         $estado = $parametros['estado'];
-        Mesa::modificarMesa($id, $estado);
+        Mesa::modificarMesa($id, $codigo, $estado);
         
         $payload = json_encode(array("mensaje" => "Mesa modificada con exito"));
         
@@ -82,7 +85,7 @@ class MesaController extends Mesa implements IApiUsable
         $lista = Mesa::obtenerTodos();
         foreach( $lista as $mesa )
         {
-          fputcsv($archivo, [$mesa->id, $mesa->estado]);
+          fputcsv($archivo, [$mesa->id, $mesa->codigo, $mesa->estado]);
         }
         fclose($archivo);
 
@@ -115,7 +118,8 @@ class MesaController extends Mesa implements IApiUsable
         {
           $nuevaMesa = new Mesa();
           $nuevaMesa->id = $filaMesa[0];
-          $nuevaMesa->estado = $filaMesa[1];
+          $nuevaMesa->codigo = $filaMesa[1];
+          $nuevaMesa->estado = $filaMesa[2];
           $nuevaMesa->crearMesaCSV();
         }
         fclose($handle);

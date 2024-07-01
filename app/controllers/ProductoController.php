@@ -9,16 +9,14 @@ class ProductoController extends Producto implements IApiUsable
         $parametros = $request->getParsedBody();
 
         $nombre = $parametros['nombre'];
-        $usuario = $parametros['usuario'];
-        $tiempo = $parametros['tiempo'];
-        $estado = $parametros['estado'];
+        $precio = $parametros['precio'];
+        $encargado = $parametros['encargado'];
 
         // Creamos el producto
         $prod = new Producto();
         $prod->nombre = $nombre;
-        $prod->usuario = $usuario;
-        $prod->tiempo = $tiempo;
-        $prod->estado = $estado;
+        $prod->precio = $precio;
+        $prod->encargado = $encargado;
         $prod->crearProducto();
 
         $payload = json_encode(array("mensaje" => "Producto creado con exito"));
@@ -56,10 +54,9 @@ class ProductoController extends Producto implements IApiUsable
         
         $id = $parametros['id'];
         $nombre = $parametros['nombre'];
-        $usuario = $parametros['usuario'];
-        $tiempo = $parametros['tiempo'];
-        $estado = $parametros['estado'];
-        Producto::modificarProducto($id, $nombre, $usuario, $tiempo, $estado);
+        $precio = $parametros['precio'];
+        $encargado = $parametros['encargado'];
+        Producto::modificarProducto($id, $nombre, $precio, $encargado);
         
         $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
         
@@ -90,7 +87,7 @@ class ProductoController extends Producto implements IApiUsable
         $lista = Producto::obtenerTodos();
         foreach( $lista as $producto )
         {
-            fputcsv($archivo, [$producto->id, $producto->nombre, $producto->usuario, $producto->tiempo, $producto->estado]);
+            fputcsv($archivo, [$producto->id, $producto->nombre, $producto->precio, $producto->encargado]);
         }
         fclose($archivo);
 
@@ -124,9 +121,8 @@ class ProductoController extends Producto implements IApiUsable
           $nuevoProducto = new Producto();
           $nuevoProducto->id = $filaPedido[0];
           $nuevoProducto->nombre = $filaPedido[1];
-          $nuevoProducto->usuario = $filaPedido[2];
-          $nuevoProducto->tiempo = $filaPedido[3];
-          $nuevoProducto->estado = $filaPedido[4];
+          $nuevoProducto->precio = $filaPedido[2];
+          $nuevoProducto->encargado = $filaPedido[3];
           $nuevoProducto->crearProductoCSV();
         }
         fclose($handle);

@@ -8,17 +8,17 @@ class PedidoController extends Pedido implements IApiUsable
     {
         $parametros = $request->getParsedBody();
 
-        $estado = $parametros['estado'];
-        $idMesa = $parametros['idMesa'];
-        $precio = $parametros['precio'];
+        $codigoMesa = $parametros['codigoMesa'];
         $nombreCliente = $parametros['nombreCliente'];
+        $estado = $parametros['estado'];
+        $rutaFoto = $parametros['rutaFoto'];
 
         // Creamos el pedido
         $ped = new Pedido();
-        $ped->estado = $estado;
-        $ped->idMesa = $idMesa;
-        $ped->precio = $precio;
+        $ped->codigoMesa = $codigoMesa;
         $ped->nombreCliente = $nombreCliente;
+        $ped->estado = $estado;
+        $ped->rutaFoto = $rutaFoto;
         $ped->crearPedido();
 
         $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
@@ -30,8 +30,8 @@ class PedidoController extends Pedido implements IApiUsable
 
     public function TraerUno($request, $response, $args)
     {
-        // Buscamos pedido por idMesa
-        $ped = $args['idMesa'];
+        // Buscamos pedido por id
+        $ped = $args['id'];
         $pedido = Pedido::obtenerPedido($ped);
         $payload = json_encode($pedido);
 
@@ -55,11 +55,11 @@ class PedidoController extends Pedido implements IApiUsable
         $parametros = $request->getParsedBody();
         
         $id = $parametros['id'];
-        $estado = $parametros['estado'];
-        $idMesa = $parametros['idMesa'];
-        $precio = $parametros['precio'];
+        $codigoMesa = $parametros['codigoMesa'];
         $nombreCliente = $parametros['nombreCliente'];
-        Pedido::modificarPedido($id, $estado, $idMesa, $precio, $nombreCliente);
+        $estado = $parametros['estado'];
+        $rutaFoto = $parametros['rutaFoto'];
+        Pedido::modificarPedido($id, $codigoMesa, $nombreCliente, $estado, $rutaFoto);
         
         $payload = json_encode(array("mensaje" => "Pedido modificado con exito"));
         
@@ -90,7 +90,7 @@ class PedidoController extends Pedido implements IApiUsable
         $lista = Pedido::obtenerTodos();
         foreach( $lista as $pedido )
         {
-            fputcsv($archivo, [$pedido->id, $pedido->estado, $pedido->idMesa, $pedido->precio, $pedido->nombreCliente]);
+            fputcsv($archivo, [$pedido->id, $pedido->codigoMesa, $pedido->nombreCliente, $pedido->estado, $pedido->rutaFoto]);
         }
         fclose($archivo);
 
@@ -111,7 +111,7 @@ class PedidoController extends Pedido implements IApiUsable
       }
     }
 
-    public function CargarCSV($request, $response, $args) // GET
+    public function CargarCSV($request, $response, $args)
     {
       $parametros = $request->getUploadedFiles();
       $archivo = isset($parametros['archivo']) ? $parametros['archivo'] : null;
@@ -123,10 +123,10 @@ class PedidoController extends Pedido implements IApiUsable
         {
           $nuevoPedido = new Pedido();
           $nuevoPedido->id = $filaPedido[0];
-          $nuevoPedido->estado = $filaPedido[1];
-          $nuevoPedido->idMesa = $filaPedido[2];
-          $nuevoPedido->precio = $filaPedido[3];
-          $nuevoPedido->nombreCliente = $filaPedido[4];
+          $nuevoPedido->codigoMesa = $filaPedido[1];
+          $nuevoPedido->nombreCliente = $filaPedido[2];
+          $nuevoPedido->estado = $filaPedido[3];
+          $nuevoPedido->rutaFoto = $filaPedido[4];
           $nuevoPedido->crearPedidoCSV();
         }
         fclose($handle);

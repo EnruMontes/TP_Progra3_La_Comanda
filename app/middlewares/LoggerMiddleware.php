@@ -26,21 +26,61 @@ class LoggerMiddleware
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    public function VerificarRol(Request $request, RequestHandler $handler): Response
+    public function VerificarRolAdmin(Request $request, RequestHandler $handler): Response
     {   
         $header = $request->getHeaderLine('Authorization');
         $token = trim(explode("Bearer", $header)[1]);
 
-        AutentificadorJWT::VerificarToken($token);
-        $parametros = (array)AutentificadorJWT::ObtenerData($token);
-
-        $sector = $parametros['sector'];
-
-        if ($sector === 'admin') {
-            $response = $handler->handle($request);
-        } else {
+        if($token!=null)
+        {
+            AutentificadorJWT::VerificarToken($token);
+            $parametros = (array)AutentificadorJWT::ObtenerData($token);
+    
+            $sector = $parametros['sector'];
+    
+            if ($sector === 'admin') {
+                $response = $handler->handle($request);
+            } else {
+                $response = new Response();
+                $payload = json_encode(array('mensaje' => 'No sos Admin'));
+                $response->getBody()->write($payload);
+            }
+        }
+        else
+        {
             $response = new Response();
-            $payload = json_encode(array('mensaje' => 'No sos Admin'));
+            $payload = json_encode(array('error' => 'Token vacio'));
+            $response->getBody()->write($payload);
+        }
+
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function VerificarRolMozo(Request $request, RequestHandler $handler): Response
+    {   
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+
+        if($token!=null)
+        {
+            AutentificadorJWT::VerificarToken($token);
+            $parametros = (array)AutentificadorJWT::ObtenerData($token);
+    
+            $sector = $parametros['sector'];
+    
+            if ($sector === 'mozo') {
+                $response = $handler->handle($request);
+            } else {
+                $response = new Response();
+                $payload = json_encode(array('mensaje' => 'No sos Mozo'));
+                $response->getBody()->write($payload);
+            }
+        }
+        else
+        {
+            $response = new Response();
+            $payload = json_encode(array('error' => 'Token vacio'));
             $response->getBody()->write($payload);
         }
 
