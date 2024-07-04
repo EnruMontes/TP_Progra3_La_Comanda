@@ -6,26 +6,26 @@ class PedidoController extends Pedido implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
+      $parametros = $request->getParsedBody();
 
-        $codigoMesa = $parametros['codigoMesa'];
-        $nombreCliente = $parametros['nombreCliente'];
-        $estado = $parametros['estado'];
-        $rutaFoto = $parametros['rutaFoto'];
+      $codigoMesa = $parametros['codigoMesa'];
+      $nombreCliente = $parametros['nombreCliente'];
+      $estado = $parametros['estado'];
+      $rutaFoto = $parametros['rutaFoto'];
 
-        // Creamos el pedido
-        $ped = new Pedido();
-        $ped->codigoMesa = $codigoMesa;
-        $ped->nombreCliente = $nombreCliente;
-        $ped->estado = $estado;
-        $ped->rutaFoto = $rutaFoto;
-        $ped->crearPedido();
+      // Creamos el pedido
+      $ped = new Pedido();
+      $ped->codigoMesa = $codigoMesa;
+      $ped->nombreCliente = $nombreCliente;
+      $ped->estado = $estado;
+      $ped->rutaFoto = $rutaFoto;
+      $ped->crearPedido();
 
-        $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
+      $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function TraerUno($request, $response, $args)
@@ -83,19 +83,18 @@ class PedidoController extends Pedido implements IApiUsable
     public function GuardarCSV($request, $response, $args) // GET
     {
       $nombreArchivo = "pedidos.csv";
-      $filePath = "archivos/" . $nombreArchivo;
 
-      if($archivo = fopen($filePath, "w"))
+      if($archivo = fopen($nombreArchivo, "w"))
       {
         $lista = Pedido::obtenerTodos();
         foreach( $lista as $pedido )
         {
-            fputcsv($archivo, [$pedido->id, $pedido->codigoMesa, $pedido->nombreCliente, $pedido->estado, $pedido->rutaFoto]);
+          fputcsv($archivo, [$pedido->id, $pedido->codigoMesa, $pedido->nombreCliente, $pedido->estado, $pedido->rutaFoto]);
         }
         fclose($archivo);
 
         // Leer el archivo CSV recién creado
-        $csvContent = file_get_contents($filePath);
+        $csvContent = file_get_contents($nombreArchivo);
 
         // Establecer la respuesta con el contenido del archivo CSV
         $response->getBody()->write($csvContent);

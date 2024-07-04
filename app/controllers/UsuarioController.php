@@ -82,19 +82,18 @@ class UsuarioController extends Usuario implements IApiUsable
     public function GuardarCSV($request, $response, $args) // GET
     {
       $nombreArchivo = "usuarios.csv";
-      $filePath = "archivos/" . $nombreArchivo;
 
-      if($archivo = fopen($filePath, "w"))
+      if($archivo = fopen($nombreArchivo, "w"))
       {
         $lista = Usuario::obtenerTodos();
         foreach( $lista as $usuario )
         {
-            fputcsv($archivo, [$usuario->id, $usuario->sector, $usuario->fechaIngreso, $usuario->fechaBaja, $usuario->nombre, $usuario->clave]);
+          fputcsv($archivo, [$usuario->id, $usuario->sector, $usuario->fechaIngreso, $usuario->fechaBaja, $usuario->nombre, $usuario->clave]);
         }
         fclose($archivo);
 
         // Leer el archivo CSV recién creado
-        $csvContent = file_get_contents($filePath);
+        $csvContent = file_get_contents($nombreArchivo);
 
         // Establecer la respuesta con el contenido del archivo CSV
         $response->getBody()->write($csvContent);

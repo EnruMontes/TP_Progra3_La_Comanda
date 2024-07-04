@@ -80,19 +80,18 @@ class ProductoController extends Producto implements IApiUsable
     public function GuardarCSV($request, $response, $args) // GET
     {
       $nombreArchivo = "productos.csv";
-      $filePath = "archivos/" . $nombreArchivo;
 
-      if($archivo = fopen($filePath, "w"))
+      if($archivo = fopen($nombreArchivo, "w"))
       {
         $lista = Producto::obtenerTodos();
         foreach( $lista as $producto )
         {
-            fputcsv($archivo, [$producto->id, $producto->nombre, $producto->precio, $producto->encargado]);
+          fputcsv($archivo, [$producto->id, $producto->nombre, $producto->precio, $producto->encargado]);
         }
         fclose($archivo);
 
         // Leer el archivo CSV recién creado
-        $csvContent = file_get_contents($filePath);
+        $csvContent = file_get_contents($nombreArchivo);
 
         // Establecer la respuesta con el contenido del archivo CSV
         $response->getBody()->write($csvContent);
