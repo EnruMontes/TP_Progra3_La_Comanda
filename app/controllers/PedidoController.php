@@ -13,15 +13,22 @@ class PedidoController extends Pedido implements IApiUsable
       $estado = $parametros['estado'];
       $rutaFoto = $parametros['rutaFoto'];
 
-      // Creamos el pedido
-      $ped = new Pedido();
-      $ped->codigoMesa = $codigoMesa;
-      $ped->nombreCliente = $nombreCliente;
-      $ped->estado = $estado;
-      $ped->rutaFoto = $rutaFoto;
-      $ped->crearPedido();
+      if(isset($codigoMesa, $nombreCliente, $estado, $rutaFoto))
+      {
+        // Creamos el pedido
+        $ped = new Pedido();
+        $ped->codigoMesa = $codigoMesa;
+        $ped->nombreCliente = $nombreCliente;
+        $ped->estado = $estado;
+        $ped->rutaFoto = $rutaFoto;
+        $ped->crearPedido();
 
-      $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
+        $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se pudo crear el pedido, se pasaron mal los parametros"));
+      }
 
       $response->getBody()->write($payload);
       return $response
@@ -30,61 +37,92 @@ class PedidoController extends Pedido implements IApiUsable
 
     public function TraerUno($request, $response, $args)
     {
-        // Buscamos pedido por id
-        $ped = $args['id'];
-        $pedido = Pedido::obtenerPedido($ped);
-        $payload = json_encode($pedido);
+      // Buscamos pedido por id
+      $id = $args['id'];
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      if(Pedido::existePedido($id))
+      {
+        $pedido = Pedido::obtenerPedido($id);
+        $payload = json_encode($pedido);
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontro el pedido con el id: " . $id));
+      }
+
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function TraerTodos($request, $response, $args)
     {
-        $lista = Pedido::obtenerTodos();
-        $payload = json_encode(array("listaPedidos" => $lista));
+      $lista = Pedido::obtenerTodos();
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      if(isset($lista))
+      {
+        $payload = json_encode(array("listaPedidos" => $lista));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontraron pedidos para listar"));
+      }
+
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function ModificarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
-        
-        $id = $parametros['id'];
-        $codigoMesa = $parametros['codigoMesa'];
-        $nombreCliente = $parametros['nombreCliente'];
-        $estado = $parametros['estado'];
-        $rutaFoto = $parametros['rutaFoto'];
+      $parametros = $request->getParsedBody();
+      
+      $id = $parametros['id'];
+      $codigoMesa = $parametros['codigoMesa'];
+      $nombreCliente = $parametros['nombreCliente'];
+      $estado = $parametros['estado'];
+      $rutaFoto = $parametros['rutaFoto'];
+
+      if(Pedido::existePedido($id))
+      {
         Pedido::modificarPedido($id, $codigoMesa, $nombreCliente, $estado, $rutaFoto);
-        
         $payload = json_encode(array("mensaje" => "Pedido modificado con exito"));
-        
-        $response->getBody()->write($payload);
-        return $response
-        ->withHeader('Content-Type', 'application/json');
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontro el pedido con el id: " . $id));
       }
       
-      public function BorrarUno($request, $response, $args)
+      $response->getBody()->write($payload);
+      return $response
+      ->withHeader('Content-Type', 'application/json');
+    }
+      
+    public function BorrarUno($request, $response, $args)
+    {
+      $idPedido = $args['id'];
+      
+      if(Pedido::existePedido($idPedido))
       {
-        $idPedido = $args['id'];
         Pedido::borrarPedido($idPedido);
-
         $payload = json_encode(array("mensaje" => "Pedido borrado con exito"));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontro el pedido con el id: " . $idPedido));
+      }
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function GuardarCSV($request, $response, $args) // GET
     {
       $nombreArchivo = "pedidos.csv";
+      $ruta = "archivos/" . $nombreArchivo;
 
-      if($archivo = fopen($nombreArchivo, "w"))
+      if($archivo = fopen($ruta, "w"))
       {
         $lista = Pedido::obtenerTodos();
         foreach( $lista as $pedido )
@@ -94,7 +132,7 @@ class PedidoController extends Pedido implements IApiUsable
         fclose($archivo);
 
         // Leer el archivo CSV recién creado
-        $csvContent = file_get_contents($nombreArchivo);
+        $csvContent = file_get_contents($ruta);
 
         // Establecer la respuesta con el contenido del archivo CSV
         $response->getBody()->write($csvContent);
@@ -104,7 +142,7 @@ class PedidoController extends Pedido implements IApiUsable
       }
       else
       {
-        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de pedidos.csv"));
+        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo"));
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
       }
@@ -133,9 +171,9 @@ class PedidoController extends Pedido implements IApiUsable
       }
       else
       {
-        $payload =  json_encode(array("mensaje" => "No se pudo leer el archivo de pedidos.csv"));
+        $payload =  json_encode(array("mensaje" => "No se pudo leer el archivo"));
       }
-                
+      
       $response->getBody()->write($payload);
       return $response
         ->withHeader('Content-Type', 'application/json');

@@ -5,15 +5,17 @@ class EncuestaController extends Encuesta
 {
     public function CargarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
+      $parametros = $request->getParsedBody();
 
-        $idPedido = $parametros['idPedido'];
-        $puntajeMozo = $parametros['puntajeMozo'];
-        $puntajeMesa = $parametros['puntajeMesa'];
-        $puntajeRestaurante = $parametros['puntajeRestaurante'];
-        $puntajeCocinero = $parametros['puntajeCocinero'];
-        $descripcion = $parametros['descripcion'];
-    
+      $idPedido = $parametros['idPedido'];
+      $puntajeMozo = $parametros['puntajeMozo'];
+      $puntajeMesa = $parametros['puntajeMesa'];
+      $puntajeRestaurante = $parametros['puntajeRestaurante'];
+      $puntajeCocinero = $parametros['puntajeCocinero'];
+      $descripcion = $parametros['descripcion'];
+  
+      if(isset($idPedido, $puntajeMozo, $puntajeMesam, $puntajeRestaurante, $puntajeCocinero, $descripcion))
+      {
         $encuesta = new Encuesta();
         $encuesta->idPedido = $idPedido;
         $encuesta->puntajeMozo = $puntajeMozo;
@@ -25,29 +27,50 @@ class EncuestaController extends Encuesta
         $encuesta->crearEncuesta();
     
         $payload = json_encode(array("mensaje" => "Encuesta cargada con exito"));
-    
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se pudo crear la encuesta, se pasaron mal los parametros"));
+      }
+  
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function TraerTodos($request, $response, $args)
     {
-        $lista = Encuesta::obtenerTodos();
+      $lista = Encuesta::obtenerTodos();
+
+      if(isset($lista))
+      {
         $payload = json_encode(array("Lista encuestas" => $lista));
-
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontraron encuestas para listar"));
+      }
+      
+      $response->getBody()->write($payload);
+      return $response
+      ->withHeader('Content-Type', 'application/json');
     }
-
+    
     public function ListarMejoresComentarios($request, $response, $args)
     {
-        $lista = Encuesta::traerMejoresComentarios();
+      $lista = Encuesta::traerMejoresComentarios();
+      
+      if(isset($lista))
+      {
         $payload = json_encode(array("Mejores comentarios" => $lista));
-
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontraron buenos comentarios para listar para listar (Promedio > 6)"));
+      }
+      
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 }

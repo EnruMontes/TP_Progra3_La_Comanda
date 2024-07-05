@@ -6,84 +6,121 @@ class UsuarioController extends Usuario implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
+      $parametros = $request->getParsedBody();
 
-        $sector = $parametros['sector'];
-        $nombre = $parametros['nombre'];
-        $clave = $parametros['clave'];
+      $sector = $parametros['sector'];
+      $nombre = $parametros['nombre'];
+      $clave = $parametros['clave'];
 
+      if(isset($sector, $nombre, $clave))
+      {
         // Creamos el usuario
         $usr = new Usuario();
         $usr->sector = $sector;
         $usr->nombre = $nombre;
         $usr->clave = $clave;
         $usr->crearUsuario();
-
+  
         $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se pudo crear el usuario, se pasaron mal los parametros"));
+      }
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function TraerUno($request, $response, $args)
     {
-        // Buscamos usuario por id
-        $usrId = $args['id'];
+      // Buscamos usuario por id
+      $usrId = $args['id'];
+
+      if(Usuario::existeUsuario($usrId))
+      {
         $usuario = Usuario::obtenerUsuario($usrId);
         $payload = json_encode($usuario);
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontro el usuario con el id: " . $usrId));
+      }
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function TraerTodos($request, $response, $args)
     {
-        $lista = Usuario::obtenerTodos();
+      $lista = Usuario::obtenerTodos();
+      if(isset($lista))
+      {
         $payload = json_encode(array("listaUsuarios" => $lista));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontraron usuarios para listar"));
+      }
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
     
     public function ModificarUno($request, $response, $args) // x-www-form-unlencoded
     {
-        $parametros = $request->getParsedBody();
+      $parametros = $request->getParsedBody();
 
-        $id = $parametros['id'];
-        $sector = $parametros['sector'];
-        $fechaIngreso = $parametros['fechaIngreso'];
-        $fechaBaja = $parametros['fechaBaja'];
-        $nombre = $parametros['nombre'];
-        $clave = $parametros['clave'];
+      $id = $parametros['id'];
+      $sector = $parametros['sector'];
+      $fechaIngreso = $parametros['fechaIngreso'];
+      $fechaBaja = $parametros['fechaBaja'];
+      $nombre = $parametros['nombre'];
+      $clave = $parametros['clave'];
+
+      if(Usuario::existeUsuario($id))
+      {
         Usuario::modificarUsuario($id, $sector, $fechaIngreso, $fechaBaja, $nombre, $clave);
-
         $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontro el usuario con el id: " . $id));
+      }
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function BorrarUno($request, $response, $args)
     {
-        $idUsuario = $args['id'];
+      $idUsuario = $args['id'];
+
+      if(Usuario::existeUsuario($idUsuario))
+      {
         Usuario::borrarUsuario($idUsuario);
-
         $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontro el usuario con el id: " . $idUsuario));
+      }
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function GuardarCSV($request, $response, $args) // GET
     {
       $nombreArchivo = "usuarios.csv";
+      $ruta = "archivos/" . $nombreArchivo;
 
-      if($archivo = fopen($nombreArchivo, "w"))
+      if($archivo = fopen($ruta, "w"))
       {
         $lista = Usuario::obtenerTodos();
         foreach( $lista as $usuario )
@@ -93,7 +130,7 @@ class UsuarioController extends Usuario implements IApiUsable
         fclose($archivo);
 
         // Leer el archivo CSV recién creado
-        $csvContent = file_get_contents($nombreArchivo);
+        $csvContent = file_get_contents($ruta);
 
         // Establecer la respuesta con el contenido del archivo CSV
         $response->getBody()->write($csvContent);
@@ -103,7 +140,7 @@ class UsuarioController extends Usuario implements IApiUsable
       }
       else
       {
-        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de pedidos.csv"));
+        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo"));
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
       }
@@ -133,7 +170,7 @@ class UsuarioController extends Usuario implements IApiUsable
       }
       else
       {
-        $payload =  json_encode(array("mensaje" => "No se pudo leer el archivo de usuarios.csv"));
+        $payload =  json_encode(array("mensaje" => "No se pudo leer el archivo"));
       }
                 
       $response->getBody()->write($payload);
@@ -151,7 +188,8 @@ class UsuarioController extends Usuario implements IApiUsable
       $existe = false;
       $listaUsuarios = Usuario::obtenerTodos();
 
-      foreach ($listaUsuarios as $usuario) {
+      foreach ($listaUsuarios as $usuario) 
+      {
         if($usuario->nombre == $nombre && $usuario->clave == $clave)
         {
           $existe = true;
@@ -159,6 +197,7 @@ class UsuarioController extends Usuario implements IApiUsable
           $sector = $usuario->sector;
         }
       }
+      
       if($existe)
       {
         $datos=array('idUsuario' => $idUsuario, 'sector' => $sector);
@@ -173,6 +212,5 @@ class UsuarioController extends Usuario implements IApiUsable
       $response->getBody()->write($payload);
 
       return $response->withHeader('Content-Type', 'application/json');
-
     }
 }

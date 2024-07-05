@@ -59,6 +59,4 @@ class Encuesta
 
         return $consulta->fetchObject('Encuesta');
     }
-
-
 }

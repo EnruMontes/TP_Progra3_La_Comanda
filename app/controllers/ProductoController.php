@@ -6,82 +6,119 @@ class ProductoController extends Producto implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
+      $parametros = $request->getParsedBody();
 
-        $nombre = $parametros['nombre'];
-        $precio = $parametros['precio'];
-        $encargado = $parametros['encargado'];
+      $nombre = $parametros['nombre'];
+      $precio = $parametros['precio'];
+      $encargado = $parametros['encargado'];
 
+      if(isset($nombre, $precio, $encargado))
+      {
         // Creamos el producto
         $prod = new Producto();
         $prod->nombre = $nombre;
         $prod->precio = $precio;
         $prod->encargado = $encargado;
         $prod->crearProducto();
-
+  
         $payload = json_encode(array("mensaje" => "Producto creado con exito"));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se pudo crear el producto, se pasaron mal los parametros"));
+      }
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function TraerUno($request, $response, $args)
     {
-        // Buscamos producto por nombre
-        $prod = $args['nombre'];
-        $producto = Producto::obtenerProducto($prod);
-        $payload = json_encode($producto);
+      // Buscamos producto por nombre
+      $prodNombre = $args['nombre'];
+      $producto = Producto::obtenerProductoPorNombre($prodNombre);
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      if($producto)
+      {
+        $payload = json_encode($producto);
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontro el producto con el nombre: " . $prodNombre));
+      }
+
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function TraerTodos($request, $response, $args)
     {
-        $lista = Producto::obtenerTodos();
+      $lista = Producto::obtenerTodos();
+      if(isset($lista))
+      {
         $payload = json_encode(array("listaProductos" => $lista));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontraron productos para listar"));
+      }
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function ModificarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
-        
-        $id = $parametros['id'];
-        $nombre = $parametros['nombre'];
-        $precio = $parametros['precio'];
-        $encargado = $parametros['encargado'];
+      $parametros = $request->getParsedBody();
+      
+      $id = $parametros['id'];
+      $nombre = $parametros['nombre'];
+      $precio = $parametros['precio'];
+      $encargado = $parametros['encargado'];
+
+      if(Producto::existeProducto($id))
+      {
         Producto::modificarProducto($id, $nombre, $precio, $encargado);
-        
         $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
-        
-        $response->getBody()->write($payload);
-        return $response
-        ->withHeader('Content-Type', 'application/json');
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontro el producto con el id: " . $id));
       }
       
-      public function BorrarUno($request, $response, $args)
+      $response->getBody()->write($payload);
+      return $response
+      ->withHeader('Content-Type', 'application/json');
+    }
+    
+    public function BorrarUno($request, $response, $args)
+    {
+      $idProducto = $args['id'];
+      
+      if(isset($idProducto))
       {
-        $idProducto = $args['id'];
         Producto::borrarProducto($idProducto);
-
         $payload = json_encode(array("mensaje" => "Producto borrado con exito"));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontro el producto con el id: " . $idProducto));
+      }
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
     }
 
     public function GuardarCSV($request, $response, $args) // GET
     {
       $nombreArchivo = "productos.csv";
+      $ruta = "archivos/" . $nombreArchivo;
 
-      if($archivo = fopen($nombreArchivo, "w"))
+      if($archivo = fopen($ruta, "w"))
       {
         $lista = Producto::obtenerTodos();
         foreach( $lista as $producto )
@@ -91,7 +128,7 @@ class ProductoController extends Producto implements IApiUsable
         fclose($archivo);
 
         // Leer el archivo CSV recién creado
-        $csvContent = file_get_contents($nombreArchivo);
+        $csvContent = file_get_contents($ruta);
 
         // Establecer la respuesta con el contenido del archivo CSV
         $response->getBody()->write($csvContent);
@@ -101,7 +138,7 @@ class ProductoController extends Producto implements IApiUsable
       }
       else
       {
-        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo de pedidos.csv"));
+        $payload =  json_encode(array("mensaje" => "No se pudo abrir el archivo"));
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
       }
@@ -129,7 +166,7 @@ class ProductoController extends Producto implements IApiUsable
       }
       else
       {
-        $payload =  json_encode(array("mensaje" => "No se pudo leer el archivo de productos.csv"));
+        $payload =  json_encode(array("mensaje" => "No se pudo leer el archivo"));
       }
                 
       $response->getBody()->write($payload);

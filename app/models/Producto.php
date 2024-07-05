@@ -22,16 +22,16 @@ class Producto
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, nombre, precio, encargado FROM productos");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM productos");
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Producto');
     }
 
-    public static function obtenerProducto($producto)
+    public static function obtenerProductoPorNombre($producto)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, nombre, precio, encargado FROM productos WHERE nombre = :nombre");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM productos WHERE nombre = :nombre");
         $consulta->bindValue(':nombre', $producto, PDO::PARAM_STR);
         $consulta->execute();
 
@@ -62,7 +62,7 @@ class Producto
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $rta = null;
 
-        if(!($this->existeProducto()))
+        if(!(Producto::existeProducto($this->id)))
         {
             $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO productos (id, nombre, precio, encargado) VALUES (:id, :nombre, :precio, :encargado)");
             $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
@@ -82,11 +82,25 @@ class Producto
         return $rta;
     }
     
-    public function existeProducto()
+    public static function existeProducto($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("SELECT 1 FROM productos WHERE id = :id");
-        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+        $consulta->execute();
+        
+        // Verifica si la consulta devuelve alguna fila
+        $resultado = $consulta->fetch(PDO::FETCH_ASSOC);
+
+        // Devuelve true si se encontró una fila, false si no
+        return $resultado !== false;
+    }
+
+    public static function existeProductoPorNombre($nombre)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 1 FROM productos WHERE nombre = :nombre");
+        $consulta->bindValue(':nombre', $nombre, PDO::PARAM_INT);
         $consulta->execute();
         
         // Verifica si la consulta devuelve alguna fila

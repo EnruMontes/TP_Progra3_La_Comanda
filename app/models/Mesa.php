@@ -20,7 +20,7 @@ class Mesa
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigo, estado FROM mesas");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM mesas");
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Mesa');
@@ -29,7 +29,7 @@ class Mesa
     public static function obtenerMesa($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigo, estado FROM mesas WHERE id = :id");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM mesas WHERE id = :id");
         $consulta->bindValue(':id', $id, PDO::PARAM_STR);
         $consulta->execute();
 
@@ -59,7 +59,7 @@ class Mesa
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $rta = null;
 
-        if(!($this->existeMesa()))
+        if(!(Mesa::existeMesa($this->id)))
         {
             $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO mesas (id, codigo, estado) VALUES (:id, :codigo, :estado)");
             $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
@@ -78,11 +78,11 @@ class Mesa
         return $rta;
     }
     
-    public function existeMesa()
+    public static function existeMesa($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("SELECT 1 FROM mesas WHERE id = :id");
-        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
         
         // Verifica si la consulta devuelve alguna fila

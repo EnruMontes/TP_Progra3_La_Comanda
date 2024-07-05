@@ -24,7 +24,7 @@ class Pedido
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoMesa, nombreCliente, estado, rutaFoto FROM pedidos");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM pedidos");
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Pedido');
@@ -33,7 +33,7 @@ class Pedido
     public static function obtenerPedido($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoMesa, nombreCliente, estado, rutaFoto FROM pedidos WHERE id = :id");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM pedidos WHERE id = :id");
         $consulta->bindValue(':id', $id, PDO::PARAM_STR);
         $consulta->execute();
 
@@ -65,7 +65,7 @@ class Pedido
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $rta = null;
 
-        if(!($this->existeProducto()))
+        if(!(Pedido::existePedido($this->id)))
         {
             $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (id, codigoMesa, nombreCliente, estado, rutaFoto) VALUES (:id, :codigoMesa, :nombreCliente, :estado, :rutaFoto");
             $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
@@ -86,11 +86,11 @@ class Pedido
         return $rta;
     }
     
-    public function existeProducto()
+    public static function existePedido($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("SELECT 1 FROM pedidos WHERE id = :id");
-        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
         
         // Verifica si la consulta devuelve alguna fila

@@ -39,7 +39,7 @@ class Usuario
     public static function obtenerUsuario($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, sector, fechaIngreso, fechaBaja, nombre, clave FROM usuarios WHERE id = :id");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM usuarios WHERE id = :id");
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
 
@@ -74,7 +74,7 @@ class Usuario
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $rta = null;
 
-        if(!($this->existeUsuario()))
+        if(!(Usuario::existeUsuario($this->id)))
         {
             $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO usuarios (id, sector, fechaIngreso, fechaBaja, nombre, clave) VALUES (:id, :sector, :fechaIngreso, :fechaBaja, :nombre, :clave)");
             $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
@@ -96,11 +96,11 @@ class Usuario
         return $rta;
     }
     
-    public function existeUsuario()
+    public static function existeUsuario($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("SELECT 1 FROM usuarios WHERE id = :id");
-        $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
         
         // Verifica si la consulta devuelve alguna fila
