@@ -20,6 +20,7 @@ require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
 require_once './controllers/EncuestaController.php';
+require_once './controllers/PedidoProductoController.php';
 
 require_once './middlewares/AuthMiddleware.php';
 require_once './middlewares/LoggerMiddleware.php';
@@ -73,9 +74,15 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
   $group->get('/GuardarCSV', \PedidoController::class . ':GuardarCSV');
   $group->get('/{id}', \PedidoController::class . ':TraerUno');
   $group->post('/CargarCSV', \PedidoController::class . ':CargarCSV');
-  $group->post('[/]', \PedidoController::class . ':CargarUno');
+  $group->post('[/]', \PedidoController::class . ':CargarUno')->add(\LoggerMiddleware::class . ':VerificarRolMozo');
+  $group->post('/GuardarImagen', \PedidoController::class . ':guardarFoto')->add(\LoggerMiddleware::class . ':VerificarRolAdminOMozo');
   $group->put('[/]', \PedidoController::class . ':ModificarUno');
   $group->delete('/{id}', \PedidoController::class . ':BorrarUno');
+});
+
+$app->group('/pedidosProductos', function (RouteCollectorProxy $group) {
+  $group->get('/{codigoPedido}', \PedidoProductoController::class . ':TraerPorCodigoPedido');
+  $group->post('[/]', \PedidoProductoController::class . ':CargarUno');
 });
 
 $app->group('/socios', function (RouteCollectorProxy $group) {

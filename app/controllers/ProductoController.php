@@ -10,6 +10,7 @@ class ProductoController extends Producto implements IApiUsable
 
       $nombre = $parametros['nombre'];
       $precio = $parametros['precio'];
+      $tiempoEstimado = $parametros['tiempoEstimado'];
       $encargado = $parametros['encargado'];
 
       if(isset($nombre, $precio, $encargado))
@@ -18,6 +19,7 @@ class ProductoController extends Producto implements IApiUsable
         $prod = new Producto();
         $prod->nombre = $nombre;
         $prod->precio = $precio;
+        $prod->tiempoEstimado = $tiempoEstimado;
         $prod->encargado = $encargado;
         $prod->crearProducto();
   
@@ -77,11 +79,12 @@ class ProductoController extends Producto implements IApiUsable
       $id = $parametros['id'];
       $nombre = $parametros['nombre'];
       $precio = $parametros['precio'];
+      $tiempoEstimado = $parametros['tiempoEstimado'];
       $encargado = $parametros['encargado'];
 
       if(Producto::existeProducto($id))
       {
-        Producto::modificarProducto($id, $nombre, $precio, $encargado);
+        Producto::modificarProducto($id, $nombre, $precio, $tiempoEstimado, $encargado);
         $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
       }
       else
@@ -123,7 +126,7 @@ class ProductoController extends Producto implements IApiUsable
         $lista = Producto::obtenerTodos();
         foreach( $lista as $producto )
         {
-          fputcsv($archivo, [$producto->id, $producto->nombre, $producto->precio, $producto->encargado]);
+          fputcsv($archivo, [$producto->id, $producto->nombre, $producto->precio, $producto->tiempoEstimado, $producto->encargado]);
         }
         fclose($archivo);
 
@@ -158,7 +161,8 @@ class ProductoController extends Producto implements IApiUsable
           $nuevoProducto->id = $filaPedido[0];
           $nuevoProducto->nombre = $filaPedido[1];
           $nuevoProducto->precio = $filaPedido[2];
-          $nuevoProducto->encargado = $filaPedido[3];
+          $nuevoProducto->tiempoEstimado = $filaPedido[3];
+          $nuevoProducto->encargado = $filaPedido[4];
           $nuevoProducto->crearProductoCSV();
         }
         fclose($handle);

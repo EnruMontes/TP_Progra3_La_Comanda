@@ -3,7 +3,7 @@
 class Encuesta
 {
     public $id;
-    public $idPedido;
+    public $codigoMesa;
     public $puntajeMozo;
     public $puntajeMesa;
     public $puntajeRestaurante;
@@ -14,8 +14,8 @@ class Encuesta
     public function crearEncuesta()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO encuestas (idPedido, puntajeMozo, puntajeMesa, puntajeRestaurante, puntajeCocinero, promedio, descripcion) VALUES (:idPedido, :puntajeMozo, :puntajeMesa, :puntajeRestaurante, :puntajeCocinero, :promedio, :descripcion)");
-        $consulta->bindValue(':idPedido', $this->idPedido, PDO::PARAM_INT);
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO encuestas (codigoMesa, puntajeMozo, puntajeMesa, puntajeRestaurante, puntajeCocinero, promedio, descripcion) VALUES (:codigoMesa, :puntajeMozo, :puntajeMesa, :puntajeRestaurante, :puntajeCocinero, :promedio, :descripcion)");
+        $consulta->bindValue(':codigoMesa', $this->codigoMesa, PDO::PARAM_STR);
         $consulta->bindValue(':puntajeMozo', $this->puntajeMozo, PDO::PARAM_INT);
         $consulta->bindValue(':puntajeMesa', $this->puntajeMesa, PDO::PARAM_INT);
         $consulta->bindValue(':puntajeRestaurante', $this->puntajeRestaurante, PDO::PARAM_INT);

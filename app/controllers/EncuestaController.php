@@ -7,17 +7,17 @@ class EncuestaController extends Encuesta
     {
       $parametros = $request->getParsedBody();
 
-      $idPedido = $parametros['idPedido'];
+      $codigoMesa = $parametros['codigoMesa'];
       $puntajeMozo = $parametros['puntajeMozo'];
       $puntajeMesa = $parametros['puntajeMesa'];
       $puntajeRestaurante = $parametros['puntajeRestaurante'];
       $puntajeCocinero = $parametros['puntajeCocinero'];
       $descripcion = $parametros['descripcion'];
   
-      if(isset($idPedido, $puntajeMozo, $puntajeMesam, $puntajeRestaurante, $puntajeCocinero, $descripcion))
+      if(isset($codigoMesa, $puntajeMozo, $puntajeMesam, $puntajeRestaurante, $puntajeCocinero, $descripcion))
       {
         $encuesta = new Encuesta();
-        $encuesta->idPedido = $idPedido;
+        $encuesta->codigoMesa = $codigoMesa;
         $encuesta->puntajeMozo = $puntajeMozo;
         $encuesta->puntajeMesa = $puntajeMesa;
         $encuesta->puntajeRestaurante = $puntajeRestaurante;

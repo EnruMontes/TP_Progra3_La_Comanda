@@ -29,7 +29,8 @@ class LoggerMiddleware
     public function VerificarRolAdmin(Request $request, RequestHandler $handler): Response
     {   
         $header = $request->getHeaderLine('Authorization');
-        $token = trim(explode("Bearer", $header)[1]);
+        // $token = trim(explode("Bearer", $header)[1]);
+        $token = isset($header[1]) ? trim(explode("Bearer", $header)[1]) : null;
 
         if($token!=null)
         {
@@ -59,7 +60,7 @@ class LoggerMiddleware
     public function VerificarRolMozo(Request $request, RequestHandler $handler): Response
     {   
         $header = $request->getHeaderLine('Authorization');
-        $token = trim(explode("Bearer", $header)[1]);
+        $token = isset($header[1]) ? trim(explode("Bearer", $header)[1]) : null;
 
         if($token!=null)
         {
@@ -69,6 +70,36 @@ class LoggerMiddleware
             $sector = $parametros['sector'];
     
             if ($sector === 'mozo') {
+                $response = $handler->handle($request);
+            } else {
+                $response = new Response();
+                $payload = json_encode(array('mensaje' => 'No sos Mozo'));
+                $response->getBody()->write($payload);
+            }
+        }
+        else
+        {
+            $response = new Response();
+            $payload = json_encode(array('error' => 'Token vacio'));
+            $response->getBody()->write($payload);
+        }
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function VerificarRolAdminOMozo(Request $request, RequestHandler $handler): Response
+    {
+        $header = $request->getHeaderLine('Authorization');
+        $token = isset($header[1]) ? trim(explode("Bearer", $header)[1]) : null;
+
+        if($token!=null)
+        {
+            AutentificadorJWT::VerificarToken($token);
+            $parametros = (array)AutentificadorJWT::ObtenerData($token);
+    
+            $sector = $parametros['sector'];
+    
+            if ($sector === 'mozo' || $sector === 'admin') {
                 $response = $handler->handle($request);
             } else {
                 $response = new Response();

@@ -91,4 +91,17 @@ class Mesa
         // Devuelve true si se encontró una fila, false si no
         return $resultado !== false;
     }
+
+    public static function crearCodigoMesa($longitud = 5) 
+    {
+        $caracteres = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $codigoRandom = '';
+        $max = strlen($caracteres) - 1;
+    
+        for ($i = 0; $i < $longitud; $i++) {
+            $codigoRandom .= $caracteres[random_int(0, $max)];
+        }
+    
+        return $codigoRandom;
+    }
 }

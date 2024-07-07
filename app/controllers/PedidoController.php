@@ -11,19 +11,18 @@ class PedidoController extends Pedido implements IApiUsable
       $codigoMesa = $parametros['codigoMesa'];
       $nombreCliente = $parametros['nombreCliente'];
       $estado = $parametros['estado'];
-      $rutaFoto = $parametros['rutaFoto'];
-
-      if(isset($codigoMesa, $nombreCliente, $estado, $rutaFoto))
+      
+      if(isset($codigoMesa, $nombreCliente, $estado))
       {
         // Creamos el pedido
-        $ped = new Pedido();
-        $ped->codigoMesa = $codigoMesa;
-        $ped->nombreCliente = $nombreCliente;
-        $ped->estado = $estado;
-        $ped->rutaFoto = $rutaFoto;
-        $ped->crearPedido();
+        $pedido = new Pedido();
+        $pedido->codigoMesa = $codigoMesa;
+        $pedido->codigoPedido = Pedido::crearCodigoPedido();
+        $pedido->nombreCliente = $nombreCliente;
+        $pedido->estado = $estado;
+        $pedido->crearPedido();
 
-        $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
+        $payload = json_encode(array("mensaje" => "Pedido creado con exito", "codigoPedido" => $pedido->codigoPedido));
       }
       else
       {
@@ -81,11 +80,10 @@ class PedidoController extends Pedido implements IApiUsable
       $codigoMesa = $parametros['codigoMesa'];
       $nombreCliente = $parametros['nombreCliente'];
       $estado = $parametros['estado'];
-      $rutaFoto = $parametros['rutaFoto'];
 
       if(Pedido::existePedido($id))
       {
-        Pedido::modificarPedido($id, $codigoMesa, $nombreCliente, $estado, $rutaFoto);
+        Pedido::modificarPedido($id, $codigoMesa, $nombreCliente, $estado);
         $payload = json_encode(array("mensaje" => "Pedido modificado con exito"));
       }
       else
@@ -174,6 +172,31 @@ class PedidoController extends Pedido implements IApiUsable
         $payload =  json_encode(array("mensaje" => "No se pudo leer el archivo"));
       }
       
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+    }
+
+    public function guardarFoto($request, $response, $args)
+    {
+      $parametros = $request->getParsedBody();
+
+      $codigoMesa = $parametros['codigoMesa'];
+      $archivo = isset($_FILES['foto']) ? $_FILES['foto'] : null;
+
+      if(isset($codigoMesa) && $archivo['name'] != "")
+      {
+        $tempFilePath = $archivo['tmp_name']; // Ruta temporal del archivo
+        Pedido::guardarImagenPedido("archivos/ImagenesPedidos/", $codigoMesa, $tempFilePath);
+        Pedido::guardarImagenSQL($codigoMesa);
+
+        $payload = json_encode(array("mensaje" => "Imagen guardada con exito"));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "Hubo un error al guardar la foto"));
+      }
+
       $response->getBody()->write($payload);
       return $response
         ->withHeader('Content-Type', 'application/json');

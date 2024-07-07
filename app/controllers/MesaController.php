@@ -8,18 +8,17 @@ class MesaController extends Mesa implements IApiUsable
     {
       $parametros = $request->getParsedBody();
 
-      $codigo = $parametros['codigo'];
       $estado = $parametros['estado'];
 
-      if(isset($codigo, $estado))
+      if(isset($estado))
       {
         // Creamos la mesa
         $mesa = new Mesa();
         $mesa->estado = $estado;
-        $mesa->codigo = $codigo;
+        $mesa->codigo = Mesa::crearCodigoMesa();
         $mesa->crearMesa();
   
-        $payload = json_encode(array("mensaje" => "Mesa creada con exito"));
+        $payload = json_encode(array("mensaje" => "Mesa creada con exito", "codigoMesa" => $mesa->codigo));
       }
       else
       {
