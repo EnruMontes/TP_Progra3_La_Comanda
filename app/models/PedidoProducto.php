@@ -113,7 +113,7 @@ class PedidoProducto
     public static function modificarPedidoProducto($id, $tiempoPreparacion, $encargado, $estado)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedidos_productos SET estado = :estado, tiempoPreparacion = :tiempoPreparacion WHERE id = :id AND encargado = :encargado AND estado = 'en preparacion'");
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedidos_productos SET estado = :estado, tiempoPreparacion = :tiempoPreparacion WHERE id = :id AND encargado = :encargado");
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
         $consulta->bindValue(':tiempoPreparacion', $tiempoPreparacion, PDO::PARAM_INT);
