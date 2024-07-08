@@ -4,6 +4,7 @@ class Encuesta
 {
     public $id;
     public $codigoMesa;
+    public $codigoPedido;
     public $puntajeMozo;
     public $puntajeMesa;
     public $puntajeRestaurante;
@@ -14,8 +15,9 @@ class Encuesta
     public function crearEncuesta()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO encuestas (codigoMesa, puntajeMozo, puntajeMesa, puntajeRestaurante, puntajeCocinero, promedio, descripcion) VALUES (:codigoMesa, :puntajeMozo, :puntajeMesa, :puntajeRestaurante, :puntajeCocinero, :promedio, :descripcion)");
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO encuestas (codigoMesa, codigoPedido, puntajeMozo, puntajeMesa, puntajeRestaurante, puntajeCocinero, promedio, descripcion) VALUES (:codigoMesa, :codigoPedido, :puntajeMozo, :puntajeMesa, :puntajeRestaurante, :puntajeCocinero, :promedio, :descripcion)");
         $consulta->bindValue(':codigoMesa', $this->codigoMesa, PDO::PARAM_STR);
+        $consulta->bindValue(':codigoPedido', $this->codigoPedido, PDO::PARAM_STR);
         $consulta->bindValue(':puntajeMozo', $this->puntajeMozo, PDO::PARAM_INT);
         $consulta->bindValue(':puntajeMesa', $this->puntajeMesa, PDO::PARAM_INT);
         $consulta->bindValue(':puntajeRestaurante', $this->puntajeRestaurante, PDO::PARAM_INT);
@@ -29,7 +31,7 @@ class Encuesta
 
     public function calcularPromedio()
     {
-        return ($this->puntajeMesa+$this->puntajeRestaurante+$this->puntajeMozo+$this->puntajeCocinero)/4;
+        return ($this->puntajeMesa + $this->puntajeRestaurante + $this->puntajeMozo + $this->puntajeCocinero) / 4;
     }
 
     public static function obtenerTodos()

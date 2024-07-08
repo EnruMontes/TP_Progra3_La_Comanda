@@ -10,18 +10,16 @@ class PedidoController extends Pedido implements IApiUsable
 
       $codigoMesa = $parametros['codigoMesa'];
       $nombreCliente = $parametros['nombreCliente'];
-      $estado = $parametros['estado'];
       
-      if(isset($codigoMesa, $nombreCliente, $estado))
+      if(isset($codigoMesa, $nombreCliente))
       {
         // Creamos el pedido
         $pedido = new Pedido();
         $pedido->codigoMesa = $codigoMesa;
         $pedido->codigoPedido = Pedido::crearCodigoPedido();
         $pedido->nombreCliente = $nombreCliente;
-        $pedido->estado = $estado;
         $pedido->crearPedido();
-
+        
         $payload = json_encode(array("mensaje" => "Pedido creado con exito", "codigoPedido" => $pedido->codigoPedido));
       }
       else
@@ -79,11 +77,10 @@ class PedidoController extends Pedido implements IApiUsable
       $id = $parametros['id'];
       $codigoMesa = $parametros['codigoMesa'];
       $nombreCliente = $parametros['nombreCliente'];
-      $estado = $parametros['estado'];
 
       if(Pedido::existePedido($id))
       {
-        Pedido::modificarPedido($id, $codigoMesa, $nombreCliente, $estado);
+        Pedido::modificarPedido($id, $codigoMesa, $nombreCliente);
         $payload = json_encode(array("mensaje" => "Pedido modificado con exito"));
       }
       else
@@ -125,7 +122,7 @@ class PedidoController extends Pedido implements IApiUsable
         $lista = Pedido::obtenerTodos();
         foreach( $lista as $pedido )
         {
-          fputcsv($archivo, [$pedido->id, $pedido->codigoMesa, $pedido->nombreCliente, $pedido->estado, $pedido->rutaFoto]);
+          fputcsv($archivo, [$pedido->id, $pedido->codigoMesa, $pedido->nombreCliente, $pedido->rutaFoto]);
         }
         fclose($archivo);
 
@@ -160,8 +157,7 @@ class PedidoController extends Pedido implements IApiUsable
           $nuevoPedido->id = $filaPedido[0];
           $nuevoPedido->codigoMesa = $filaPedido[1];
           $nuevoPedido->nombreCliente = $filaPedido[2];
-          $nuevoPedido->estado = $filaPedido[3];
-          $nuevoPedido->rutaFoto = $filaPedido[4];
+          $nuevoPedido->rutaFoto = $filaPedido[3];
           $nuevoPedido->crearPedidoCSV();
         }
         fclose($handle);

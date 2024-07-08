@@ -6,18 +6,23 @@ class Pedido
     public $codigoMesa;
     public $codigoPedido;
     public $nombreCliente;
-    public $estado;
+    public $precioFinal;
     public $rutaFoto;
+    public $tiempoEstimadoPedido;
 
     public function crearPedido()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (codigoMesa, codigoPedido, nombreCliente, estado, rutaFoto) VALUES (:codigoMesa, :codigoPedido, :nombreCliente, :estado, :rutaFoto)");
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (codigoMesa, codigoPedido, nombreCliente, rutaFoto, tiempoEstimadoPedido) VALUES (:codigoMesa, :codigoPedido, :nombreCliente, :rutaFoto, :tiempoEstimadoPedido)");
         $consulta->bindValue(':codigoMesa', $this->codigoMesa, PDO::PARAM_STR);
         $consulta->bindValue(':codigoPedido', $this->codigoPedido, PDO::PARAM_STR);
         $consulta->bindValue(':nombreCliente', $this->nombreCliente, PDO::PARAM_STR);
-        $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
         $consulta->bindValue(':rutaFoto', null, PDO::PARAM_STR);
+        $consulta->bindValue(':tiempoEstimadoPedido', null, PDO::PARAM_STR);
+        $consulta->execute();
+
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesas SET estado = 'cliente esperando pedido' WHERE codigo = :codigoMesa");
+        $consulta->bindValue(':codigoMesa', $this->codigoMesa, PDO::PARAM_STR);
         $consulta->execute();
 
         return $objAccesoDatos->obtenerUltimoId();
@@ -42,14 +47,13 @@ class Pedido
         return $consulta->fetchObject('Pedido');
     }
 
-    public static function modificarPedido($id, $codigoMesa, $nombreCliente, $estado)
+    public static function modificarPedido($id, $codigoMesa, $nombreCliente)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedidos SET codigoMesa = :codigoMesa, nombreCliente = :nombreCliente, estado = :estado, rutaFoto = :rutaFoto WHERE id = :id");
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedidos SET codigoMesa = :codigoMesa, nombreCliente = :nombreCliente, rutaFoto = :rutaFoto WHERE id = :id");
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->bindValue(':codigoMesa', $codigoMesa, PDO::PARAM_STR);
         $consulta->bindValue(':nombreCliente', $nombreCliente, PDO::PARAM_STR);
-        $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
         $rutaFoto = $codigoMesa . ".jpg";
         $consulta->bindValue(':rutaFoto', $rutaFoto, PDO::PARAM_STR);
         $consulta->execute();
@@ -70,11 +74,10 @@ class Pedido
 
         if(!(Pedido::existePedido($this->id)))
         {
-            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (id, codigoMesa, nombreCliente, estado, rutaFoto) VALUES (:id, :codigoMesa, :nombreCliente, :estado, :rutaFoto");
+            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (id, codigoMesa, nombreCliente, rutaFoto) VALUES (:id, :codigoMesa, :nombreCliente, :rutaFoto");
             $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
             $consulta->bindValue(':codigoMesa', $this->codigoMesa, PDO::PARAM_STR);
             $consulta->bindValue(':nombreCliente', $this->nombreCliente, PDO::PARAM_STR);
-            $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
             $consulta->bindValue(':rutaFoto', $this->rutaFoto, PDO::PARAM_STR);
             $consulta->execute();
             
@@ -82,7 +85,7 @@ class Pedido
         }
         else
         {
-            Pedido::modificarPedido($this->id, $this->codigoMesa, $this->nombreCliente, $this->estado, $this->rutaFoto);   
+            Pedido::modificarPedido($this->id, $this->codigoMesa, $this->nombreCliente);   
             $rta = $objAccesoDatos->obtenerUltimoId();
         }
 

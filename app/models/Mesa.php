@@ -104,4 +104,28 @@ class Mesa
     
         return $codigoRandom;
     }
+
+    public static function existeMesaEstado($codigoMesa, $estado)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT 1 FROM mesas WHERE codigo = :codigoMesa AND estado = :estado");
+        $consulta->bindValue(':codigoMesa', $codigoMesa, PDO::PARAM_STR);
+        $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+        $consulta->execute();
+        
+        // Verifica si la consulta devuelve alguna fila
+        $resultado = $consulta->fetch(PDO::FETCH_ASSOC);
+
+        // Devuelve true si se encontró una fila, false si no
+        return $resultado !== false;
+    }
+
+    public static function modificarEstadoMesa($codigo, $estado)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesas SET estado = :estado WHERE codigo = :codigo");
+        $consulta->bindValue(':codigo', $codigo, PDO::PARAM_STR);
+        $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+        $consulta->execute();
+    }
 }

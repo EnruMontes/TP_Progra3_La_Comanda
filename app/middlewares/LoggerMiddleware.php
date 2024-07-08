@@ -103,7 +103,37 @@ class LoggerMiddleware
                 $response = $handler->handle($request);
             } else {
                 $response = new Response();
-                $payload = json_encode(array('mensaje' => 'No sos Mozo'));
+                $payload = json_encode(array('mensaje' => 'No sos Mozo o Admin'));
+                $response->getBody()->write($payload);
+            }
+        }
+        else
+        {
+            $response = new Response();
+            $payload = json_encode(array('error' => 'Token vacio'));
+            $response->getBody()->write($payload);
+        }
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function VerificarRolEmpleadosCocina(Request $request, RequestHandler $handler): Response
+    {
+        $header = $request->getHeaderLine('Authorization');
+        $token = isset($header[1]) ? trim(explode("Bearer", $header)[1]) : null;
+
+        if($token!=null)
+        {
+            AutentificadorJWT::VerificarToken($token);
+            $parametros = (array)AutentificadorJWT::ObtenerData($token);
+    
+            $sector = $parametros['sector'];
+    
+            if ($sector === 'cocinero' || $sector === 'bartender' || $sector === 'cervecero') {
+                $response = $handler->handle($request);
+            } else {
+                $response = new Response();
+                $payload = json_encode(array('mensaje' => 'No sos empleado de cocina'));
                 $response->getBody()->write($payload);
             }
         }

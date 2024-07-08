@@ -168,4 +168,44 @@ class MesaController extends Mesa implements IApiUsable
       return $response
         ->withHeader('Content-Type', 'application/json');
     }
+
+    public function CobrarMesa($request, $response, $args)
+    {
+      $parametros = $request->getParsedBody();
+      $codigoMesa = $parametros['codigoMesa'];
+
+      if(Mesa::existeMesaEstado($codigoMesa, "cliente comiendo"))
+      {
+        Mesa::modificarEstadoMesa($codigoMesa, "cliente pagando");
+        $payload = json_encode(array("mensaje" => "Mesa cobrandose"));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontro la mesa con el codigo: " . $codigoMesa . " y el cliente comiendo"));
+      }
+
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+    }
+
+    public function CerrarMesa($request, $response, $args)
+    {
+      $parametros = $request->getParsedBody();
+      $codigoMesa = $parametros['codigoMesa'];
+
+      if(Mesa::existeMesaEstado($codigoMesa, "cliente pagando"))
+      {
+        Mesa::modificarEstadoMesa($codigoMesa, "cerrada");
+        $payload = json_encode(array("mensaje" => "Mesa cerrada"));
+      }
+      else
+      {
+        $payload = json_encode(array("mensaje" => "No se encontro la mesa con el codigo: " . $codigoMesa . " y el cliente pagando"));
+      }
+
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+    }
 }
